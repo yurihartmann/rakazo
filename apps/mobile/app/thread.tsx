@@ -451,7 +451,7 @@ export default function Thread() {
   // Covers returning from a pushed screen; the AppState listener covers returning from background.
   useFocusEffect(
     useCallback(() => {
-      if (botId) void saveLastBotId(botId);
+      if (botId) void saveLastBotId(botId).catch(() => undefined);
       markReadIfVisible();
     }, [botId, markReadIfVisible]),
   );

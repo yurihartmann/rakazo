@@ -83,4 +83,4 @@ export function buildFeaturedConnectorTiles(
 }
 
 export const EMPTY_PLUGIN_CATALOG_MESSAGE =
-  "Configure a plugin catalog (Composio or Pipedream) on the server to connect apps.";
+  "Configure a plugin catalog on the server to connect apps.";
