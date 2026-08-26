@@ -66,10 +66,10 @@ export default function Integrations() {
   }, []);
 
   async function notifyAppConnected(item: ConnectionCatalogItem) {
-    if (!lastBotId) return;
-    await rpc("onboarding/appConnected", { botId: lastBotId, provider: item.slug }).catch(
-      () => undefined,
-    );
+    const botId = lastBotId || (await loadLastBotId());
+    if (!botId) return;
+    if (botId !== lastBotId) setLastBotId(botId);
+    await rpc("onboarding/appConnected", { botId, provider: item.slug }).catch(() => undefined);
   }
 
   async function connect(item: ConnectionCatalogItem) {
