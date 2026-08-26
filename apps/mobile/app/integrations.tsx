@@ -3,6 +3,7 @@ import {
   abortableDelay,
   buildFeaturedConnectorTiles,
   EMPTY_PLUGIN_CATALOG_MESSAGE,
+  matchFeaturedConnectorId,
 } from "@rakazo/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -37,15 +38,15 @@ export default function Integrations() {
   const connectionAttempt = useRef<AbortController | null>(null);
 
   const featuredTiles = useMemo(() => buildFeaturedConnectorTiles(catalog), [catalog]);
-  const catalogApps = useMemo(() => {
-    const featuredKeys = new Set(
-      featuredTiles
-        .map((tile) => tile.item)
-        .filter((item): item is ConnectionCatalogItem => Boolean(item))
-        .map((item) => `${item.connectorId}:${item.slug}`),
-    );
-    return catalog.filter((item) => !featuredKeys.has(`${item.connectorId}:${item.slug}`));
-  }, [catalog, featuredTiles]);
+  const catalogApps = useMemo(
+    () =>
+      catalog.filter(
+        (item) =>
+          matchFeaturedConnectorId(item.slug) === null &&
+          matchFeaturedConnectorId(item.name) === null,
+      ),
+    [catalog],
+  );
 
   async function refresh() {
     const [nextCatalog, installs] = await Promise.all([

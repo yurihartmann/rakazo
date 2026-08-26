@@ -4,6 +4,7 @@ import {
   abortableDelay,
   buildFeaturedConnectorTiles,
   EMPTY_PLUGIN_CATALOG_MESSAGE,
+  matchFeaturedConnectorId,
 } from "@rakazo/core";
 import { Button } from "@rakazo/ui-web";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -73,22 +74,16 @@ export function PluginsOverlay({
 
   const featuredTiles = useMemo(() => buildFeaturedConnectorTiles(catalog), [catalog]);
   const showFeatured = view === "all" && !query.trim();
-  const featuredItemKeys = useMemo(
-    () =>
-      new Set(
-        featuredTiles
-          .map((tile) => tile.item)
-          .filter((item): item is ConnectionCatalogItem => Boolean(item))
-          .map((item) => itemKey(item)),
-      ),
-    [featuredTiles],
-  );
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const scoped = view === "connected" ? catalog.filter((item) => item.connected) : catalog;
     const deduped = showFeatured
-      ? scoped.filter((item) => !featuredItemKeys.has(itemKey(item)))
+      ? scoped.filter(
+          (item) =>
+            matchFeaturedConnectorId(item.slug) === null &&
+            matchFeaturedConnectorId(item.name) === null,
+        )
       : scoped;
     if (!needle) return deduped;
     return deduped.filter(
@@ -97,7 +92,7 @@ export function PluginsOverlay({
         item.slug.toLowerCase().includes(needle) ||
         item.connectorId.toLowerCase().includes(needle),
     );
-  }, [catalog, featuredItemKeys, query, showFeatured, view]);
+  }, [catalog, query, showFeatured, view]);
 
   async function notifyAppConnected(item: ConnectionCatalogItem) {
     if (!activeBotId) return;
