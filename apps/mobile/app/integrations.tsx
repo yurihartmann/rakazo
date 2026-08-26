@@ -35,6 +35,7 @@ export default function Integrations() {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastBotId, setLastBotId] = useState("");
+  const [catalogReady, setCatalogReady] = useState(false);
   const connectionAttempt = useRef<AbortController | null>(null);
 
   const featuredTiles = useMemo(() => buildFeaturedConnectorTiles(catalog), [catalog]);
@@ -55,12 +56,14 @@ export default function Integrations() {
     ]);
     setCatalog(nextCatalog);
     setSources(installs.filter((item) => item.kind === "mcp" || item.kind === "api"));
+    setCatalogReady(true);
   }
 
   useEffect(() => {
-    void refresh().catch((reason) =>
-      setError(reason instanceof Error ? reason.message : "Could not load integrations"),
-    );
+    void refresh().catch((reason) => {
+      setCatalogReady(false);
+      setError(reason instanceof Error ? reason.message : "Could not load integrations");
+    });
     void loadLastBotId().then(setLastBotId);
     return () => connectionAttempt.current?.abort();
   }, []);
@@ -96,7 +99,7 @@ export default function Integrations() {
         }).catch(() => undefined);
         if (row?.status === "connected") {
           if (controller.signal.aborted) return;
-          await notifyAppConnected(item);
+          void notifyAppConnected(item);
           await refresh();
           return;
         }
@@ -293,7 +296,9 @@ export default function Integrations() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.section}>Featured apps</Text>
-        {catalog.length === 0 ? (
+        {!catalogReady ? (
+          <ActivityIndicator color={native.fillPressed} />
+        ) : catalog.length === 0 ? (
           <Text style={styles.secondary}>{EMPTY_PLUGIN_CATALOG_MESSAGE}</Text>
         ) : (
           featuredTiles.map((tile) => {
